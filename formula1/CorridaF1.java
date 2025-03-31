@@ -1,26 +1,61 @@
 package formula1;
-
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class CorridaF1 {
     public static void main(String[] args) {
-        String[] nomes = {"Corredor1", "Corredor2"};
-        List<Thread> threads = new ArrayList<>();
-
+        String[] nomes = {"Hamilton", "Verstappen", "Leclerc", "Norris", "Bottas"};
+        
+        System.out.println("\u001B[32m" + "\n----- COMEÇA A CORRIDA -----" + "\u001B[0m");
+        
+        List<Carro> carros = new ArrayList<>();
         for (String nome : nomes) {
-            Thread t = new Thread(new Carro(nome));
-            threads.add(t);
-            t.start();
+            carros.add(new Carro(nome));
         }
-
-        for (Thread t : threads) {
+        
+        SafetyCar safetyCar = new SafetyCar(carros);
+        safetyCar.start();
+        
+        for (Carro carro : carros) {
+            carro.start();
+        }
+        
+        for (Carro carro : carros) {
             try {
-                t.join();
+                carro.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-
+        
+        safetyCar.pararMonitoramento();
+        safetyCar.interrupt();
+        
+        System.out.println("\u001B[34m" + "\n----- RESULTADO FINAL -----" + "\u001B[0m");
+        
+        List<Carro> finalizados = new ArrayList<>();
+        List<Carro> abandonados = new ArrayList<>();
+        
+        for (Carro carro : carros) {
+            if (carro.isProblemasTecnicos()) {
+                abandonados.add(carro);
+            } else {
+                finalizados.add(carro);
+            }
+        }
+        
+        finalizados.sort(Comparator.comparingInt(Carro::getColocacao));
+        
+        for (Carro carro : finalizados) {
+            System.out.println(carro.getColocacao() + "º lugar: " + carro.getNome());
+        }
+        
+        if (!abandonados.isEmpty()) {
+            System.out.println("\nAbandonaram:");
+            for (Carro carro : abandonados) {
+                System.out.println("- " + carro.getNome());
+            }
+        }
     }
 }
